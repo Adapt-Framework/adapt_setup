@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<adapt_framework>
+    <bundle>
+        <name>Adapt Framework Setup</name>
+        <version>1.0.0</version>
+        <type>Application</type>
+        <description></description>
+        <installed>Yes</installed>
+    </bundle>
+</adapt_framework>
