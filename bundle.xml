@@ -5,14 +5,24 @@
         <label>Adapt Framework Setup</label>
         <version>1.0.0</version>
         <type>application</type>
-        <namespace>/applications/adapt_setup</namespace>
+        <namespace>\adapt\setup</namespace>
         <description>Runs after install so that bundles can be configured before use.</description>
         <copyright>2015 Adapt Framework</copyright>
         <license>MIT</license>
-        <website>http://www.adaptframework.com/documentaion/applications/adapt_setup</website>
+        <website>http://www.adaptframework.com/documentaion/bundles/adapt_setup/adapt_setup-1-0-0</website>
         <depends_on>
-            <bundle>bootstrap_views</bundle>
-            <bundle>font_awesome_views</bundle>
+            <bundle>
+                <name>bootstrap_views</name>
+                <version>1</version>
+            </bundle>
+            <bundle>
+                <name>font_awesome_views</name>
+                <version>1</version>
+            </bundle>
+            <bundle>
+                <name>bootstrap_modal_manager</name>
+                <version>1</version>
+            </bundle>
         </depends_on>
     </bundle>
 </adapt_framework>
