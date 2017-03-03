@@ -5,11 +5,22 @@
         <label>Adapt Framework Setup</label>
         <version>1.0.0</version>
         <type>application</type>
+        <version_status>release</version_status>
+        <availability>public</availability>
         <namespace>\adapt\setup</namespace>
         <description>Runs after install so that bundles can be configured before use.</description>
         <copyright>2015 Adapt Framework</copyright>
         <license>MIT</license>
-        <website>http://www.adaptframework.com/documentaion/bundles/adapt_setup/adapt_setup-1-0-0</website>
+        <vendor>
+            <name>Adapt Framework</name>
+            <website>https://www.adaptframework.com</website>
+        </vendor>
+        <authors>
+            <author>
+                <name>Matt Bruton</name>
+                <email>matt.bruton@gmail.com</email>
+            </author>
+        </authors>
         <depends_on>
             <bundle>
                 <name>bootstrap_views</name>
@@ -22,6 +33,10 @@
             <bundle>
                 <name>bootstrap_modal_manager</name>
                 <version>1</version>
+            </bundle>
+            <bundle>
+                <name>adapt</name>
+                <version>2</version>
             </bundle>
         </depends_on>
     </bundle>

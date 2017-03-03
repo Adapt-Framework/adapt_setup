@@ -1,12 +1,12 @@
 <?php
 
-namespace applications\adapt_setup{
+namespace adapt\setup{
     
     /* Prevent direct access */
     defined('ADAPT_STARTED') or die;
     
-    use \extensions\bootstrap_views as bs;
-    use \extensions\font_awesome_views as fa;
+    use \bootstrap\views as bs;
+    use \font_awesome\views as fa;
     
     class controller_root extends controller{
         
@@ -34,59 +34,30 @@ namespace applications\adapt_setup{
              * settings file (/adapt/settings.xml)
              */
             if (isset($this->request['host']) && isset($this->request['username'])){
-                $xml = new \frameworks\adapt\xml_document('adapt_framework');
-                $settings = new xml_settings();
-                $xml->add($settings);
                 
-                $setting = new xml_setting();
-                $settings->add($setting);
-                $setting->add(new xml_name('datasource.driver'));
-                $setting->add(new xml_values(new xml_value("\\frameworks\\adapt\\data_source_mysql")));
+                /* Set the data source */
+                $this->bundles->set_global_setting("datasource.driver", array("\\adapt\\data_source_mysql"));
                 
-                $setting = new xml_setting();
-                $settings->add($setting);
-                $setting->add(new xml_name('datasource.host'));
-                $setting->add(new xml_values(new xml_value($this->request['host'])));
+                /* Set the host */
+                $this->bundles->set_global_setting("datasource.host", array($this->request['host']));
                 
-                $setting = new xml_setting();
-                $settings->add($setting);
-                $setting->add(new xml_name('datasource.schema'));
-                $setting->add(new xml_values(new xml_value($this->request['schema'])));
+                /* Set the schema */
+                $this->bundles->set_global_setting("datasource.schema", array($this->request['schema']));
                 
-                $setting = new xml_setting();
-                $settings->add($setting);
-                $setting->add(new xml_name('datasource.username'));
-                $setting->add(new xml_values(new xml_value($this->request['username'])));
+                /* Set the username */
+                $this->bundles->set_global_setting("datasource.username", array($this->request['username']));
                 
-                $setting = new xml_setting();
-                $settings->add($setting);
-                $setting->add(new xml_name('datasource.password'));
-                $setting->add(new xml_values(new xml_value($this->request['password'])));
+                /* Set the password */
+                $this->bundles->set_global_setting("datasource.password", array($this->request['password']));
                 
-                $setting = new xml_setting();
-                $settings->add($setting);
-                $setting->add(new xml_name('datasource.writable'));
-                $setting->add(new xml_values(new xml_value('Yes')));
+                /* Set the writable */
+                $this->bundles->set_global_setting("datasource.writable", array("Yes"));
                 
-                $fp = fopen(ADAPT_PATH . "settings.xml", "w");
-                if ($fp){
-                    fwrite($fp, $xml);
-                    fclose($fp);
-                }
-                
-                ///*
-                // * We need to connect the source and install the
-                // * adapt tables.
-                // */
-                //$this->data_source = new \frameworks\adapt\data_source_mysql($this->request['host'], $this->request['username'], $this->request['password'], $this->request['schema'], false);
-                //
-                ///* Get the adapt bundle */
-                //$bundles = new \frameworks\adapt\bundles();
-                //$adapt = $bundles->get_bundle('adapt');
-                //$adapt->install();
+                /* Save the settings */
+                $this->bundles->save_global_settings();
                 
                 header('Location: /start');
-                exit(1);
+                //exit(1);
             }
         }
         
@@ -282,7 +253,7 @@ namespace applications\adapt_setup{
             $right->add(new bs\view_form_group($control, 'Password'));
             
             $control = new bs\view_input('text', 'schema');
-            $right->add(new bs\view_form_group($control, 'Default schema'));
+            $right->add(new bs\view_form_group($control, 'Default schema', "If the database doesn't exist it will be created."));
             
             $controls = new html_div(null, array('class' => 'controls'));
             $right->add($controls);
@@ -376,6 +347,119 @@ namespace applications\adapt_setup{
         
         public function view_bundle_details(){
             return json_encode($this->response);
+        }
+        
+        public function view_sql_testing(){
+            $this->add_view(new html_h2("SQL Testing"));
+            
+            $this->add_view(new html_p("Work to do"));
+            $this->add_view(
+                new html_ul(
+                    array(
+                        new html_li("Reverse sql->update so it's the same way around as sql->select")
+                    )
+                )
+            );
+            
+            $this->add_view(new html_h3("Complex selects"));
+            $sql = $this
+                ->data_source
+                ->sql
+                ->select(array('id' => 'bundle_version_id', 'label' => 'name', 'fullname' => new sql_concat('bv.name', sql::q(" "), 'bv.version')))
+                ->from('bundle_version', 'bv')
+                ->join('field', 'f', new sql_cond('field_id', sql::EQUALS, 'field_id'))
+                ->left_join($this->data_source->sql->select('*')->from('field'), 's', 'field_id')
+                ->where(
+                    new sql_cond('date_deleted', sql::IS, new sql_null)
+                )
+                ->group_by('bv.name')
+                ->group_by('bv.version')
+                ->order_by('id')
+                ->having(
+                    new sql_or(
+                        new sql_and(
+                            new sql_cond('bv.version', sql::NOT_EQUALS, sql::q("1.0.0")),
+                            new sql_cond('bv.name', sql::EQUALS, sql::q("foo"))
+                        ),
+                        new sql_between('id', 20, 25)
+                    )
+                )
+                ->limit(1, 100);
+            
+            $this->add_view(new html_pre(new html_code($sql)));
+            
+            
+            $this->add_view(new html_h3("Updates"));
+            $sql = $this
+                ->data_source
+                ->sql
+                ->update(array('field' => 'f', 'name' => 'n'))
+                ->set('name', sql::q("Foo"))
+                ->where(
+                    new sql_or(
+                        new sql_and(
+                            new sql_cond('bv.version', sql::NOT_EQUALS, sql::q("1.0.0")),
+                            new sql_cond('bv.name', sql::EQUALS, sql::q("foo"))
+                        ),
+                        new sql_between('id', 20, 25)
+                    )
+                );
+            
+            $this->add_view(new html_pre(new html_code($sql)));
+            
+            $this->add_view(new html_h3("Delete from"));
+            $sql = $this
+                ->data_source
+                ->sql
+                ->delete_from(array('field', 'bundle'))
+                ->where(
+                    new sql_or(
+                        new sql_and(
+                            new sql_cond('bv.version', sql::NOT_EQUALS, sql::q("1.0.0")),
+                            new sql_cond('bv.name', sql::EQUALS, sql::q("foo"))
+                        ),
+                        new sql_between('id', 20, 25)
+                    )
+                );
+            
+            $this->add_view(new html_pre(new html_code($sql)));
+            
+            $this->add_view(new html_h3("Create database"));
+            $sql = $this
+                ->data_source
+                ->sql
+                ->create_database('fred');
+            
+            $this->add_view(new html_pre(new html_code($sql)));
+            
+            $this->add_view(new html_h3("Drop database"));
+            $sql = $this
+                ->data_source
+                ->sql
+                ->drop_database('fred');
+            
+            $this->add_view(new html_pre(new html_code($sql)));
+            
+            
+            $this->add_view(new html_h3("Drop table"));
+            $sql = $this
+                ->data_source
+                ->sql
+                ->drop_table('data_type');
+            
+            $this->add_view(new html_pre(new html_code($sql)));
+            
+            
+            $this->add_view(new html_h3("Alter table"));
+            $sql = $this
+                ->data_source
+                ->sql
+                ->alter_table('bundle_version')
+                ->drop('type')
+                ->change('name', 'bundle_name', 'varchar(24)', false)
+                ->add('namespace', 'varchar(24)', false, null, null, null, 'type');
+            
+            $this->add_view(new html_pre(new html_code($sql)));
         }
     }
     

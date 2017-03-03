@@ -1,8 +1,8 @@
 <?php
 
-namespace applications\adapt_setup{
+namespace adapt\setup{
     
-    class controller extends \frameworks\adapt\controller{
+    class controller extends \adapt\controller{
         
     }
     
