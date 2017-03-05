@@ -274,6 +274,10 @@ namespace adapt\setup{
             
         }
         
+        public function view_applications(){
+            return $this->load_controller("\\adapt\\setup\\controller_repository_applications");
+        }
+        
         public function view_start(){
             $this->add_view(new bs\view_h2('Getting started'));
             $this->add_view(new bs\view_p("Every great thing that has ever happened started somewhere.", true));
